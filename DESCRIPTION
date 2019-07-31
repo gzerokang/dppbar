@@ -1,0 +1,33 @@
+Package: dppbar
+Type: Package
+Title: Data Processing and Plotting for Business Analysis in R
+Version: 1.0.0
+Author: Jizhou Kang
+Maintainer: Jizhou Kang <jizhou_kang@hotmail.com>
+Contributor: Che Li, Zhiguo Xiao
+Description: A toolbox of data processing and plotting methods in R. It combines multiple data cleaning, manipultaing and statistical summarying methods together with fancy visualization tools simplified from other packages to help people with little R programming experience to accomplish exploratory data analysis for their own goal in R fastly. The package has a designed emphasis on financial and economic data, especially balance sheet and panel data.
+License: GPL-2
+Encoding: UTF-8
+LazyData: true
+Depends:
+    R (>= 3.1.0),
+    dlm (>= 1.1.4),
+    dplyr (>= 0.7.2),
+    dummies (>= 1.5.6),
+    ggplot2 (>= 3.0.0),
+    mice (>= 2.46.0),
+    plm (>= 1.6.6),
+    plotly (>= 4.7.1),
+    plyr (>= 1.8.4),
+    RColorBrewer (>= 1.1.2),
+    stargazer (>= 5.2.2),
+    tidyr (>= 0.7.1),
+    VIM (>= 4.7.0)
+Suggests:
+    backports,
+    lattice,
+    plotrix,
+    knitr,
+    rmarkdown
+RoxygenNote: 6.0.1
+VignetteBuilder: knitr
