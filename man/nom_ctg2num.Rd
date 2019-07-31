@@ -41,5 +41,5 @@ nom_ctg2num(test_df,col.name=c('label','promotion'),drop=c('H','N'))
 }
 }
 \seealso{
-\code{\link{dummies::dummy}}
+\code{\link[dummies]{dummy}}
 }

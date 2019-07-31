@@ -28,6 +28,7 @@
 #' @param ... other parameters for plotting. See \code{\link[plotly]{layout}}
 #' for more information
 #' @export
+#' @importFrom magrittr %>%
 #' @return This function will return an object of class plotly. By calling the function you
 #' will get a bubble plot where X axis value, Y axis value, color, size and text is your choice.
 #' @usage bubble_plot(dataframe,ctg.idx,num.idx,size.idx,color.idx,
@@ -39,7 +40,7 @@
 #' test_df=machinery_fin_charts%>%
 #'   filter(年份==2017 & 分类=='通用设备')
 #' bubble_plot(dataframe=test_df,ctg.idx=15,num.idx='毛利率',size.idx='主营业务收入',
-#'             color.idx='经济区划分',text.idx=7,colors=brewer.pal(8,'Set1'),
+#'             color.idx='经济区划分',text.idx=7,colors=RColorBrewer::brewer.pal(8,'Set1'),
 #'             xaxis_name='营收CAGR5',yaxis_name='毛利率',xaxis_format='%',yaxis_format='%',
 #'             title='通用设备企业实力气泡图（2017）',paper_bgcolor='#ccece6')
 #' test_df=machinery_fin_charts%>%
@@ -61,13 +62,13 @@ bubble_plot=function(dataframe,ctg.idx,num.idx,size.idx,color.idx,
     }else{
       idx=colnames(dataframe)[idx]
     }
-    idx=enquo(idx)
+    idx=rlang::enquo(idx)
     return(idx)
   }
 
   select_column=sapply(list(ctg.idx,num.idx,size.idx,color.idx,text.idx),format_idx)
   dataframe=dataframe%>%
-    select(!!select_column[[1]],!!select_column[[2]],!!select_column[[3]],
+    dplyr::select(!!select_column[[1]],!!select_column[[2]],!!select_column[[3]],
            !!select_column[[4]],!!select_column[[5]])
   dataframe=dataframe[complete.cases(dataframe),]
 

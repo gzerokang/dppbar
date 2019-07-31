@@ -10,16 +10,17 @@ License: GPL-2
 Encoding: UTF-8
 LazyData: true
 Depends:
-    R (>= 3.1.0),
-    dlm (>= 1.1.4),
-    dplyr (>= 0.7.2),
-    dummies (>= 1.5.6),
-    ggplot2 (>= 3.0.0),
-    mice (>= 2.46.0),
-    plm (>= 1.6.6),
+    mice,
     plotly (>= 4.7.1),
+    RColorBrewer,
+    R (>= 3.1.0)
+Imports:
+    dlm (>= 1.1.4),
+    dummies (>= 1.5.6),
+    dplyr (>= 0.7.2),
+    ggplot2 (>= 3.0.0),
+    plm (>= 1.6.6),
     plyr (>= 1.8.4),
-    RColorBrewer (>= 1.1.2),
     stargazer (>= 5.2.2),
     tidyr (>= 0.7.1),
     VIM (>= 4.7.0)

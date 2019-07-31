@@ -7,6 +7,6 @@
 #' @docType data
 #' @usage data(tmall_milk_sales)
 #' @format A dataframe containing 336 rows and 11 columns
-#' @references Tmall at \link{www.tmall.com}
+#' @references Tmall at \url{www.tmall.com}
 #' @keywords datasets
 NULL

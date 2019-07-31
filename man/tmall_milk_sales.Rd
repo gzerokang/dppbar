@@ -14,6 +14,6 @@ which is the largest Chinese online market. The data contains features of the mi
 such as weight and price, as well as total sales volume accumulated until 2018-07.
 }
 \references{
-Tmall at \link{www.tmall.com}
+Tmall at \url{www.tmall.com}
 }
 \keyword{datasets}

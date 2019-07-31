@@ -33,6 +33,7 @@
 #' @param ... other parameters for plotting, mainly layout options.
 #' See "Details" and \code{\link[plotly]{layout}} for more information
 #' @export
+#' @importFrom RColorBrewer brewer.pal
 #' @return This function will return an object of class plotly. By calling the function you
 #' will get a bar plot of multiple categorical variables with respect to an specified index.
 #' @usage bar_plot(dataframe,ctg.idx,num.idx,condition.idx,criteria,top_N,colors,
@@ -44,14 +45,14 @@
 #' data("estate_fin_charts")
 #' bar_plot(dataframe=estate_fin_charts,ctg.idx = 'Year',num.idx = 'income',
 #'          condition.idx = '证券简称',criteria=2016,top_N=12,
-#'          colors=brewer.pal(12,'Set3'),
+#'          colors=RColorBrewer::brewer.pal(12,'Set3'),
 #'          xaxis_name='年份',yaxis_name='营业收入（亿元）',
 #'          title='2016年营业收入前12名房地产企业历年营收变化',
 #'          paper_bgcolor='#ccece6',margin=list(t=36,l=24))
 #' ## another example, where condition.idx is missing
 #' data("macro_data_chn")
 #' bar_plot(dataframe=macro_data_chn,ctg.idx='year',num.idx=c(9:12),
-#'          criteria = 2016,colors = brewer.pal(4,'Set1'),
+#'          criteria = 2016,colors = RColorBrewer::brewer.pal(4,'Set1'),
 #'          xaxis_name = '年份',yaxis_name = '商品价格（元/吨）',
 #'          title='一些大宗商品的历年价格变化',
 #'          paper_bgcolor='#ccece6',margin=list(t=36,l=24))

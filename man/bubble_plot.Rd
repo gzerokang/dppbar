@@ -61,7 +61,7 @@ data("machinery_fin_charts")
 test_df=machinery_fin_charts\%>\%
   filter(年份==2017 & 分类=='通用设备')
 bubble_plot(dataframe=test_df,ctg.idx=15,num.idx='毛利率',size.idx='主营业务收入',
-            color.idx='经济区划分',text.idx=7,colors=brewer.pal(8,'Set1'),
+            color.idx='经济区划分',text.idx=7,colors=RColorBrewer::brewer.pal(8,'Set1'),
             xaxis_name='营收CAGR5',yaxis_name='毛利率',xaxis_format='\%',yaxis_format='\%',
             title='通用设备企业实力气泡图（2017）',paper_bgcolor='#ccece6')
 test_df=machinery_fin_charts\%>\%
