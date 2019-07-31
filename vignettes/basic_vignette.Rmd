@@ -1,0 +1,1158 @@
+---
+title: "dppbar: Examples in a suggested workflow"
+author: "Jizhou Kang"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{dppbar: Examples in a suggested workflow}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE,fig.width=6,fig.height=4)
+```
+
+*This vignette is designed to show all the examples in the package with a specially designed order to illustrate each function in this package.*
+
+
+## 0. Data Preparing
+
+### 0.1 Loading Package
+
+```{r,message=FALSE}
+library(dppbar)
+```
+
+### 0.2 Loading Data
+
+**Data 1: Chinese Dairy Industry Companies' Financial Charts(2006-2017)**
+```{r,echo=FALSE}
+data("dairy_fin_charts")
+head(dairy_fin_charts,5)
+```
+
+**Data 2: Chinese Real Estate Industry Companies' Financial Charts(2007-2016)**
+```{r,echo=FALSE}
+data("estate_fin_charts")
+head(estate_fin_charts[,1:5],5)
+```
+
+**Data 3: Chinese Machinery Manufacturing Industry Companies' Financial Charts(2000-2017)**
+```{r,echo=FALSE}
+data("machinery_fin_charts")
+head(machinery_fin_charts[,1:5],5)
+```
+
+**Data 4: Some Macroeconomic Data of China(2008-2016)**
+```{r,echo=FALSE}
+data("macro_data_chn")
+head(macro_data_chn[,1:5],5)
+```
+
+**Data 5: Tmall Market Milk Sales Data(Accumulated until 2018-07)**
+```{r,echo=FALSE}
+data("tmall_milk_sales")
+head(tmall_milk_sales[,1:5],5)
+```
+
+
+## 1. Data Processing
+
+### 1.1 column_class(): Separate features by categorical or numerical
+
+When haveing a dataset, it's always necessary to separate categorical variable and numerical
+variable, because you need to treat them differently. The usage and arguments of the function
+are as follows:
+
+**column_class(dataframe)**
+
+- *dataframe:*	a dataframe object
+
+```{r}
+machinery_fin_charts_class=column_class(machinery_fin_charts)
+machinery_fin_charts_class$numerical
+machinery_fin_charts_class$categorical
+```
+
+### 1.2 num2ctg(): Transfomr numerical variable into categorical variable
+
+Sometimes it's useful to transform numerical variable into categorical variable, this function allows you to do it in three ways: equally separated, partition based on assigned
+percentage and partition based on certain criteria. The usage and arguments of the function
+are as follows:
+
+**num2ctg(dataframe,col.id,col.name=NA,partition,level.name,type='quantile')**
+
+- *dataframe:* a dataframe-like object
+
+- *col.id:*	an integer, specify which column in the dataframe that you need to transfer
+
+- *col.name:*	a character, another way to specify the to-be-transformed column, will be disregarded if col.id is specified
+
+- *partition:* an interger or a vectorof numerics, based on the type, specified how to transfer.
+
+- *level.name:*	a vactor of strings, the category that will be assigned to each group of numerical variable
+
+- *type:*	a character that can take values of "quantile", "equal", and "criteria", refers to different partition types, default to "quantile"
+
+```{r}
+test_df=macro_data_chn
+test_df$PPI[2:4]=NA
+test_df$PPI
+num2ctg(test_df,col.name = 'PPI',partition = c(0.2,0.5,0.3))
+num2ctg(test_df,col.name = 'PPI',partition = c(98,100),
+level.name = c('low','medium','high'),type='criteria')
+num2ctg(test_df,col.name = 'PPI',partition = 3,
+level.name = c('low','medium','high'),type='equal')
+num2ctg(test_df,col.id = 4,partition = 3,
+level.name = c('low','medium','high'),type='equal')
+```
+
+The function treats missing values by leave them as NA.
+
+Of course one also need functions to transform categorical variables into numerical variables. Since essentially there are two kinds of categorical variable: ordinal and nominal, it's necessarily to treat them differently. 
+
+### 1.3 ord_ctg2num(): Transform ordinal categorical variable into numerical variable
+
+This function convert an ordinal categorical variable into a numerical variable, with
+each level been assigned a number specified by the function arguments. The usage and arguments of the function are as follows: 
+
+**ord_ctg2num(dataframe,col.id,col.name=NA,permutation,numeric_levels)**
+
+- *dataframe:* a dataframe-like object
+
+- *col.id:*	an integer, specify which column in the dataframe that you need to transfer
+
+- *col.name:*	a character, another way to specify the to-be-transformed column, will be disregarded if col.id is specified
+
+- *permutation:*	a vector of string which is a permutation of unique element in your categorical variable. It will serve as the rule for assign numeric values. The first element in this permutation will be assigned the smallest numeric value
+
+- *numeric_levels:*	a numeric vector which determine the numeric values to be assigned to the categorical variable, default to consecutive sequence of length equal to permutation and start from 1
+
+```{r}
+test_df=tmall_milk_sales
+test_df$label[12:15]=NA
+ord_ctg2num(test_df,col.name = 'label',permutation = c('P','O','H'))[1:10]
+ord_ctg2num(test_df,col.id = 11,permutation = c('P','O','H'))[1:10]
+ord_ctg2num(test_df,col.id = 11,permutation = c('P','O','H'),
+numeric_levels=c(1,5,10))[1:10]
+```
+
+### 1.4 nom_ctg2num(): Transform  nominal categorical variable into numerical variable
+
+Transform multiple nominal categorical variable into numerical variable by dummies,
+can specify which level in each categorical variable should be treated as base line. The usage and arguments of the function are as follows: 
+
+**nom_ctg2num(dataframe,col.id,col.name=NA,drop)**
+
+- *dataframe:*	a dataframe-like object
+
+- *col.id:*	a vector of integers, specify which column in the dataframe that you need to transfer
+
+- *col.name:*	a vector of characters, another way to specify the to-be-transformed column, will be disregarded if col.id is specified
+
+- *drop:*	tells the function which dummied column you want to drop. The dropped one will be served as the baseline in like regression model. Can be missed.
+
+```{r}
+test_df=tmall_milk_sales
+nom_ctg2num(test_df,col.id=c(1,2,3,4,5))[1:5,]
+nom_ctg2num(test_df,col.name=c('label','promotion'),drop=c('H','N'))[1:5,]
+```
+
+Note that when using this function, you should be careful with missing values becasue it will be treated as another dummy.
+
+### 1.5 miss_prep(): Missing value pattern checking and processing
+
+This function will detect the pattern of missing values and output the pattern as a dataframe. It can also process the dataframe by eliminating the missed columns or rows when needed. The usage and arguments of the function are as follows: 
+
+**miss_prep(dataframe,remove.column=TRUE,remove.row=FALSE)**
+
+- *dataframe:*	a dataframe-like object
+
+- *drop.column:*	a logical indicating whether to automatically drop columns. Default to TRUE 
+
+- *drop.row:*	a logical indicating whether to automatically drop rows. Default to FALSE
+
+```{r}
+test_df=tmall_milk_sales
+test_df[sample(1:nrow(test_df),200),'promotion'] <- NA
+test_df[sample(1:nrow(test_df),50),'feature'] <- NA
+test_df[sample(1:nrow(test_df),20),'units'] <- NA
+test_df[sample(1:nrow(test_df),5),'unit_price'] <- NA
+
+miss=miss_prep(test_df)
+miss$pattern
+
+miss_prep(miss$df,remove.row = TRUE)$pattern
+```
+
+
+### 1.6 impute_missing(): impute missing value by MICE
+
+Usually impute missing values in  a dataframe is part of the data analysis workflow. This function uses the famous mice (multivariate imputation by chained equations) algorithm to automatically impute missing variables. It's a handy approach of the more complicated mice package which preserves its main feature. The usage and arguments of the function are as follows: 
+
+**impute_missing(dataframe,ord.col,ignore.predictor=NA,ignore.imputation=NA)**
+
+- *dataframe:*	a dataframe-like object
+
+- *ord.col:*	a vector of strings. It tells the mice function which columns of the original dataframe should be treated as ordinal categorical variable
+
+- *ignore.predictor:*	a logical indicating which columns should be removed when using mice. Default to NA
+
+- *ignore.imputation:*	a logical indicating which columns with missing values should not be imputed. Default to NA
+
+```{r,message=FALSE}
+test_df=tmall_milk_sales
+test_df[sample(1:nrow(test_df),200),'promotion'] <- NA
+test_df[sample(1:nrow(test_df),50),'feature'] <- NA
+test_df[sample(1:nrow(test_df),20),'units'] <- NA
+test_df[sample(1:nrow(test_df),5),'unit_price'] <- NA
+test_df[sample(1:nrow(test_df),20),'label'] <- NA
+
+df_imputed1=impute_missing(test_df,ord.col="label")
+sapply(df_imputed1$impute,function(x) sum(is.na(x)))
+
+df_imputed2=impute_missing(test_df,ord.col="label",
+                           ignore.imputation = "unit_price")
+sapply(df_imputed2$impute,function(x) sum(is.na(x)))
+
+## to check whether the imputation make sense
+densityplot(df_imputed1$pool,scales=list(x=list(relation='free')))
+```
+
+## 2. Data Visualization
+
+### 2.1 bar_plot(): Bar plot of different categories
+
+Bar plots is very common in data visualization. This function makes stacked bar plot with manipulated data. For example, you may use this function to plot the change of the top 10 companies' income over time, which have largest income in a certain year. The usage and arguments of the function are as follows: 
+
+**bar_plot(dataframe,ctg.idx,num.idx,condition.idx,criteria,top_N,colors,xaxis_name,**
+**yaxis_name,title,...)**
+
+- *dataframe:* a dataframe object
+
+- *ctg.idx:* a character or an integer, indicate which column will be selected as the variable to show in x axis
+
+- *num.idx:* a vector of character or an integer, indicate which column(s) will be selected as the variable to show in y axis
+
+- *condition.idx:* a character or an integre, indicate which column will be treated as the legend name
+
+- *criteria:*	a character or a numeric, depend on the class of element of the column specified by ctg.idx
+
+- *top_N:*	a integer, if there are too many categories in the legend, use this argument to choose the top n levels with respect to criteria
+
+- *colors:*	a vector, the palette used for plotting
+
+- *xaxis_name:*	name of x axis
+
+- *yaxis_name:*	name of y axis
+
+- *title:* the the title of the plot
+
+- *...:* other parameters for plotting, mainly layout options such as "paper_bgcolor" and "margin"
+
+```{r}
+bar_plot(dataframe=estate_fin_charts,
+         ctg.idx = 'Year',num.idx = 'income',
+         condition.idx = '证券简称',criteria=2016,top_N=12,
+         colors=brewer.pal(12,'Set3'),
+         xaxis_name='年份',yaxis_name='营业收入（亿元）',
+         title='2016年营业收入前12名房地产企业历年营收变化',
+         paper_bgcolor='#ccece6',margin=list(t=36,l=24))
+
+bar_plot(dataframe=macro_data_chn,
+         ctg.idx='year',num.idx=c(9:12),
+         criteria = 2016,colors = brewer.pal(4,'Set1'),
+         xaxis_name = '年份',yaxis_name = '商品价格（元/吨）',
+         title='一些大宗商品的历年价格变化',
+         paper_bgcolor='#ccece6',margin=list(t=36,l=24))
+```
+
+### 2.2 bubble_plot(): Bubble plot with color, size and text showing infomations
+
+Bubble plot is maybe the simplest way for showing multiple dimensional information. This function makes bubble plot with each bubble represent a sample, and the x axis, y axis, size, color and text of the bubble containing different information. The usage and arguments of the function are as follows:  
+
+**bubble_plot(dataframe,ctg.idx,num.idx,size.idx,color.idx,text.idx,colors,xaxis_name,**
+**xaxis_format,yaxis_name,yaxis_format,legend_pos_y=1,title,...)**
+
+- *dataframe:*	a dataframe object
+
+- *ctg.idx:*	a character or an integer, indicate which column will be selected as the variable to show in x axis
+
+- *num.idx:*	a character or an integer, indicate which column will be selected as the variable to show in y axis
+
+- *size.idx:* a character or an integer, indicate which column will be selected as the variable to be assigned to the bubble's size, should be a numeric column
+
+- *color.idx:*	a character or and integer, indicate which column will be selected as the variable to be assigned to the bubble's color, perfer categorical column
+
+- *text.idx:* a character or an integer, indicate which column will be selected as the variable shown in the hover label
+
+- *colors:* a vector, the colors that to be used in making bubbles
+
+- *xaxis_name:*	name of x axis
+
+- *xaxis_format:*	format of x axis, typically "none" or "%"
+
+- *yaxis_name:* name of y axis
+
+- *yaxis_format:* format of y axis, typically "none" or "%"
+
+- *legend_pos_y:* 	a numeric, indicate the postion of the title of legend on vertical axis, default to 1
+
+- *title:* the title of the plot
+
+- *...:* other parameters for plotting, mainly layout options such as "paper_bgcolor" and "margin"
+
+
+```{r}
+test_df=machinery_fin_charts%>%
+  filter(年份==2017 & 分类=='通用设备')
+bubble_plot(dataframe=test_df,ctg.idx=15,num.idx='毛利率',size.idx='主营业务收入',
+            color.idx='经济区划分',text.idx=7,colors=brewer.pal(8,'Set1'),
+            xaxis_name='营收CAGR5',yaxis_name='毛利率',xaxis_format='%',yaxis_format='%',
+            title='通用设备企业实力气泡图（2017）',paper_bgcolor='#ccece6')
+
+test_df=machinery_fin_charts%>%
+  filter(年份==2017 & 分类=='电力设备')
+bubble_plot(dataframe=test_df,ctg.idx=10,num.idx='毛利率',size.idx='主营业务收入',
+            color.idx=15,text.idx=7,
+            colors='Reds',xaxis_name='员工总数（人）',yaxis_name='毛利率',
+            xaxis_format='',yaxis_format='%',legend_pos_y = 1.02,
+            title='电力设备企业实力气泡图（2017）',paper_bgcolor='#ccece6')
+```
+
+
+### 2.3 corr_check(): Checking correlation between variables by pairs plot
+
+It's essential to check correlation between variables before putting them into regression
+formulas, to avoid multicolinearity. This function gives a nice plot for checking correlation between numerical variables. The color for each some facet suggest correlation. The usage and arguments of the function are as follows:  
+
+**corr_check(dataframe,eliminate)**
+
+- *dataframe:*	a dataframe object
+
+- *eliminate:*	a vector of numeric or character, indicate the column names or column index of those columns that you do not want to include in correlation plot. Usually id
+
+```{r}
+corr_check(dataframe=macro_data_chn,eliminate = 'year')
+```
+
+```{r}
+## another example, add a categorical variable,
+## see if the function eliminate it automatically
+test_df=macro_data_chn
+test_df$ctg='cat'
+corr_check(dataframe = test_df,eliminate=c(1,2))
+```
+
+### 2.4 distribution_plot(): Multiple types distribution plot
+
+It's useful to check the distribution for each numerical variable, sometimes may also check distribution with respect to a categorical variable. This function makes this job easier. It provides three types of plot: histogram plue kernel estimation for numerical variable itself, box plot or violin plot for numerical variable and a categorical variable. The usage and arguments of the function are as follows:  
+
+**distribution_plot(dataframe,ctg.idx=NA,num.idx,type='histogram',xaxis_name,labels=NA,**
+**yaxis_name,title,...)**
+
+- *dataframe:* a dataframe object
+
+- *ctg.idx:* a character or an integer, indicate which column will be selected as the categorical variable that will be used to split the numerical variable in box or violin plot, default to NA
+
+- *num.idx:*	a vector of character or an integer, indicate which column will be selected as the numerical variable to show distribution with
+
+- *type:*	a string of either 'histogram', 'violin' or 'box', decide the way to show distribution, default to 'histogram'
+
+- *xaxis_name:*	name of x axis
+
+- *tick_text:* 	a vector of string, tick text that will be applied to box or violin plot
+
+- *yaxis_name:*	name of y axis
+
+- *title:*	the the title of the plot
+
+- *...:* other parameters for plotting, mainly layout options such as "paper_bgcolor" and "margin"
+
+```{r}
+distribution_plot(dataframe=tmall_milk_sales,
+                  ctg.idx=NA,num.idx='unit_weight',
+                  type='histogram',xaxis_name='单位净含量（克）',
+                  yaxis_name='产品数量（件）',
+                  title='线上销售乳制品单位净含量分布')
+distribution_plot(dataframe=tmall_milk_sales,
+                  ctg.idx=11,num.idx='unit_weight',
+                  type='violin',xaxis_name='销量情况',
+                  tick_text=c('热销产品','普通产品','滞销产品'),
+                  yaxis_name='单位净含量（克）',
+                  title='线上销售乳制品单位净含量按销量分布',
+                  paper_bgcolor='#ccece6')
+distribution_plot(dataframe=tmall_milk_sales,
+                  ctg.idx=2,num.idx='unit_weight',
+                  type='box',xaxis_name='销量情况',
+                  tick_text=c('酸奶产品','牛奶产品'),
+                  yaxis_name='单位净含量（克）',
+                  title='线上销售乳制品单位净含量按产品线分布',
+                  paper_bgcolor='#ccece6',
+                  margin=list(t=36,l=36,b=36,l=10))
+```
+
+### 2.5 donut_plot(): Making donut plot to show percentage
+
+Pie plot is often used to show percentage of a numerical variable with respect to a categorical variable. Donut plot is a fancy version of pie plots. The usage and arguments of the function are as follows:  
+
+**donut_plot(dataframe,ctg.idx,num.idx,condition,condition.idx,colors,hole_size=0.5,**
+**title,legendOn=TRUE,...)**
+
+- *dataframe:* a dataframe object
+
+- *ctg.idx:*	a character or an integer, indicate which column will be selected as the categorical variable for each part of the pie
+
+- *num.idx:*	a character or an integer, indicate which column will be selected as the numerical variable to determine percentage
+
+- *condition:*	a vector, indicate how to select part of the dataframe
+
+- *condition.idx:* 	a character or an integer, indicate which column is the condition in.
+
+- *colors:*	a vector, the Palette that will be used to draw the graph
+
+- *hole_size:*	a numeric, the size of the hole on the center of the original pie plot, default to 0.5
+
+- *title:*	a string, title of the plot
+
+- *legendOn:*	a logical, how should the name of each category displayed, default to TRUE
+
+- *...:* other parameters for plotting, mainly layout options such as "paper_bgcolor" and "margin"
+
+```{r}
+donut_plot(dataframe=machinery_fin_charts,
+           ctg.idx="分类",num.idx='主营业务收入',
+           condition=2017,condition.idx='年份',
+           colors=c("#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072",
+                    "#80B1D3" ,"#FDB462", "#B3DE69"),
+           title='机械行业营收构成（2017）',
+           legendOn=FALSE,paper_bgcolor='#ccece6')
+
+donut_plot(dataframe=dairy_fin_charts,
+           ctg.idx="name",num.idx='income',
+           condition=2017,condition.idx='Year',colors = "",
+           title='乳制品企业市场份额（2017）',legendOn=TRUE,
+           paper_bgcolor='#ccece6',margin=list(t=30,b=72))
+
+```
+
+### 2.6 double_axis(): Plot bars and lines in same plot with double axises
+
+This function makes the classic bar plus line plot that you may see in every data related
+analysis work. Excel has a samilar function, but in R, the function is more flexiable. The usage and arguments of the function are as follows:  
+
+**double_axis(dataframe,ctg.idx,lines.idx,bars.idx,condition,condition.idx,lines.mode,**
+**lines.colors,lines.width=2,lines.names,bars.colors,bars.names,xaxis_name,**
+**line.axis_format="",line.axis_name,bar.axis_name,title,annOn,...)**
+
+- *dataframe:* a dataframe object
+
+- *ctg.idx:*	a character or an integer, indicate which column will be selected as the variable to show in x axis
+
+- *lines.idx:* a vector of characters or integers, but not both, indicate which column(s) will be selected to make line plot
+
+- *bars.idx:*	a vector of characters or integers, but not both, indicate which column(s) will be selected to make bar plot
+
+- *condition:*	a vector, indicate how to select part of the dataframe
+
+- *condition.idx:*	a character or an integer, indicate which column is the condition in. Should be given some value if the condition appears in multiple columns in the dataframe
+
+- *lines.mode:*	a string indicating the mode of line plot, can be 'lines' or 'lines+markers'
+
+- *lines.colors:*	a vector, the palette for line plot
+
+- *lines.width:*	a numeric, the width of the line plot, default to 2
+
+- *lines.names:*	a vector of strings, indicating the name of line variables in legend
+
+- *bars.colors:*	a vector, the palette for bar plot
+
+- *bars.names:*	a vector of strings, indicating the name of bar variables in legend
+
+- *xaxis_name:*	a string, the name of x axis
+
+- *line.axis_format:*	a string, the format of y axis of line plot. See layout for more information, default to ""
+
+- *line.axis_name:*	a string, the name of y axis for line plot, will be displayed on the left side of the plot
+
+- *bars.axis_name:*	a string, the name of y axis for bar plot, will be displayed on the right side of the plot
+
+- *title:*title of the plot
+
+- *annOn:*	a logical, decide whether to add annotations for line plot. 
+
+- *...:* other parameters for plotting, mainly layout options such as "paper_bgcolor" and "margin"
+
+```{r}
+test_df=dairy_fin_charts%>%
+  filter(name=='伊利股份')
+double_axis(dataframe=test_df,
+            ctg.idx='Year',lines.idx='profit',
+            bars.idx=2,lines.mode='lines+markers',
+            lines.colors='rgb(128,0,128)',lines.names = '营业利润',
+            bars.colors = 'rgba(55,128,192,0.7)',
+            bars.names = '营业收入',xaxis_name = '年份',
+            line.axis_name = '营业利润（亿元）',
+            bar.axis_name = '营业收入（亿元）',
+            title='伊利股份营收及利润',annOn=T,
+            margin=list(r=40))
+
+double_axis(dataframe=estate_fin_charts,ctg.idx='Year',lines.idx=c(5,6),
+            bars.idx=c('asset','liability'),condition='万科A',lines.mode = 'lines',
+            lines.colors = c("rgb(128, 0, 128)",'rgb(255,140,0)'),
+            lines.width = 4,lines.names=c('总资产收益率','净资产收益率'),
+            bars.colors = c('rgba(55,128,192,0.7)','rgba(219, 64, 82,0.7)'),
+            bars.names = c('总资产','总负债'),xaxis_name = '年份',
+            line.axis_format = '',line.axis_name='百分比',bar.axis_name = '单位：亿元',
+            title='财务分析（万科A）',annOn=F,
+            legend=list(x=0.45,y=1.03,orientation='h',
+                        font=list(size=10),bgcolor="transparent"),
+            margin=list(r=54),paper_bgcolor='#ccece6')
+```
+
+**Note:** be careful when set annOn when have more than one lines, the plot may not be clear
+
+```{r}
+double_axis(dataframe=estate_fin_charts,
+            ctg.idx='Year',lines.idx=c(5,6),
+            bars.idx=c('asset','liability'),
+            condition='万科A',lines.mode = 'lines+markers',
+            lines.colors = c("rgb(128, 0, 128)",'rgb(255,140,0)'),
+            lines.width = 4,lines.names=c('总资产收益率','净资产收益率'),
+            bars.colors = c('rgba(55,128,192,0.7)','rgba(219, 64, 82,0.7)'),
+            bars.names = c('总资产','总负债'),
+            xaxis_name = '年份',line.axis_format = '',
+            line.axis_name='百分比',bar.axis_name = '单位：亿元',
+            title='财务分析（万科A）',annOn=T,
+            legend=list(x=0.45,y=1.03,orientation='h',
+                        font=list(size=10),bgcolor="transparent"),
+            margin=list(r=54),paper_bgcolor='#ccece6')
+```
+
+### 2.7 facet_bar(): Separate bar plot into small facets
+
+Only bar plot may not showing enough information. An alternative way as suggested in package "lattice" is to split a whole bar plot into smaller bar plots by another categorical variable and shown them in small facets. This function uses ggplot2 to achieve a similar goal but have a more fancy outlook than lattice. The usage and arguments of the function are as follows:  
+
+**facet_bar(dataframe,ctg.idx,num.idx,condition.idx,label.idx,legend_name,legend_label,**
+**colors,xaxis_name,xaxis_label,yaxis_name,title,type='histogram',stack=F,paper_bgcolor**
+**="#f2f2f2")**
+
+- *dataframe:* a dataframe object
+
+- *ctg.idx:*	a character or an integer, indicate which column will be selected as the categorical variable shown in x axis
+
+- *num.idx:*	a vector of character or an integer, indicate which column will be selected as the numerical variable shown in y axis, only valid when "type" is bar
+
+- *condition.idx:*	a character or an integer, indicate which column will be treated as the legend
+
+- *label.idx:*	a character or an integer, indicate to which column should the split of facets been done
+
+- *legend_name:*	title of the legend
+
+- *legend_label:*	a vector of string, name of legend ticks
+
+- *colors:*	a vector or a character, the palette used for plotting
+
+- *xaxis_name:*	name of x axis
+
+- *xaxis_label:*	name of ticks of the x axis
+
+- *yaxis_name:*	name of y axis
+
+- *title:*	name of the plot
+
+- *type:*	a character of either 'histogram' or 'bar', indicating the way for drawing bars, default to 'histogram'.
+
+- *stack:*	a logical indicate whether the bar should be stack or dodged, default to TURE which means stack
+
+- *paper_bgcolor:*	background color of the whole plot, default to "#f2f2f2"
+
+```{r}
+facet_bar(dataframe=tmall_milk_sales,
+          ctg.idx='label',num.idx=9,
+          condition.idx='promotion',label.idx='brand',
+          legend_name='是否促销',
+          legend_label=c('不促销','促销'),
+          colors=c('#A6CEE3','#1F78B4'),xaxis_name='产品类型',
+          xaxis_label=c('热销产品','普通产品','滞销产品'),
+          yaxis_name='价格（元）',
+          title='线上乳制品分类销售情况',
+          type='bar',stack=T,
+          paper_bgcolor='#ccece6')
+
+facet_bar(dataframe=tmall_milk_sales,
+          ctg.idx='class',num.idx=NA,
+          condition.idx='label',label.idx='brand',
+          legend_name='产品类型',
+          legend_label=c('热销产品','普通产品','滞销产品'),
+          colors=brewer.pal(3,'Set2'),xaxis_name='分类',
+          xaxis_label=c('酸奶','牛奶'),
+          yaxis_name='产品数（件）',title='线上乳制品分类销售情况',
+          paper_bgcolor='#ccece6')
+```
+
+### 2.8 horizontal_bar(): Horizontal bar plot showing percentage
+
+When having bars with same length, like percentage (it all sums to 100%), it looks better
+to use a horizontal bar plot. This function helps to calculate percentage directly from 
+a typical dataframe and make such plot. The usage and arguments of the function are as follows:  
+
+**horizontal_bar(dataframe,h.idx,v.idx,h_name,v_name,colors,xaxis_name,title,...)**
+
+- *dataframe:*	a dataframe object
+
+- *h.idx:*	a character or an integer, indicate which column will be selected as the variable to show in horizontal axis, should be a categorical variable
+
+- *v.idx:*	a character or an integer, indicate which column will be selected as the variable to show in vertical axis, should be a categorical variable
+
+- *h_name:*	a vector, indicate the label shows in horizontal axis
+
+- *v_name:*	a vector, indicate the label shows in vertical axis
+
+- *colors:*	a vector, the palette used to plot the bar
+
+- *xaxis_name:*	a character, the name of x axis
+
+- *title:*	a character, the name of the plot
+
+- *...:* other parameters for plotting, mainly layout options such as "paper_bgcolor" and "margin"
+
+```{r}
+horizontal_bar(dataframe=tmall_milk_sales,
+               h.idx='label',v.idx='pack',
+               h_name=c('热销产品','普通产品','滞销产品'),
+               v_name=c('爱克林包装','杯装','袋装','盒装','瓶装'),
+               colors = brewer.pal(3,'Set1'),
+               xaxis_name='百分比',
+               title='电商乳制品产品线分类统计')
+
+horizontal_bar(dataframe=tmall_milk_sales,h.idx='feature',v.idx='label',
+               h_name=c('儿童牛奶','养生牛奶','新出产品','其他产品',
+                        '牛奶饮料','主推产品'),
+               v_name=c('热销产品','普通产品','滞销产品'),
+               colors = c('#E41A1C','#377EB8','#4DAF4A','#984EA3',
+                          '#FF7FF0','#FFD92F'),
+               xaxis_name='百分比',
+               title='电商乳制品产品线分类统计',
+               paper_bgcolor='#ccece6',
+               plot_bgcolor='#ccece6')
+```
+
+### 2.9 label_bar_plot(): Bar plot with a small label as annotation
+
+This function makes horizontal bar plot with a small label on the right end of each bar to show the value of the bar. It's a fancy way to make basic bar plot. The usage and arguments of the function are as follows:  
+
+**static_bar_plot(dataframe,ctg.idx,num.idx,condition.idx,criteria,top_N,colors,xaxis_name,**
+**title,paper_bgcolor='#f2f2f2')**
+
+- *dataframe:*	a dataframe object
+
+- *ctg.idx:*	a character or an integer, indicate which column will be selected as the criteria to select part of the data
+
+- *num.idx:*	a vector of character or an integer, indicate which column(s) will be selected as the numerical variable (x axis in the plot)
+
+- *condition.idx:*	a character or an integer, indicate which column will be treated as the categorical variable (y axis in the plot)
+
+- *criteria:*	a character or a numeric, depend on the class of element of the column specified by ctg.idx, how to subset part of data
+
+- *top_N:* a integer, if there are too many categories in the legend, use this argument to choose the top n levels with respect to criteria
+
+- *colors:*	a vector or a character, the palette used for plotting
+
+- *xaxis_name:* name of x axis
+
+- *title:*	name of the plot
+
+- *paper_bgcolor:* background color of the whole plot, default to "#f2f2f2"
+
+```{r}
+label_bar_plot(dataframe=estate_fin_charts,
+               ctg.idx='Year',num.idx='roa',
+               condition.idx = '证券简称',criteria=2016,
+               top_N=10,colors='#377EB8',
+               xaxis_name = 'ROA',
+               title='房地产企业2016年ROA排名前十企业')
+
+label_bar_plot(dataframe=macro_data_chn,
+               ctg.idx='year',num.idx=c(9:12),
+               criteria=2016,colors=brewer.pal(4,'Set1'),
+               xaxis_name = '价格（元/吨）',
+               title='大宗商品商品2016年价格',
+               paper_bgcolor = '#ccece6')
+```
+
+For cross-sectional data, just add an index then you are able to use the function:
+
+```{r}
+## cross-sectional data
+test_df=estate_fin_charts%>%
+  filter(Year==2016)%>%
+  select(证券简称,income)
+## make plot
+test_df$Year=2016
+label_bar_plot(dataframe=estate_fin_charts,
+               ctg.idx='Year',num.idx='roa',
+               condition.idx = '证券简称',
+               criteria=2016,top_N=10,
+               colors='#377EB8',
+               xaxis_name = 'ROA',
+               title='房地产企业2016年ROA排名前十企业',
+               paper_bgcolor='#ccece6')
+
+```
+
+### 2.10 line_plot(): Classic line plots
+
+Lines plots are the most classic plots in data visualization. This function is for making lines plot with multiple choice for display. The usage and arguments of the function are as follows:  
+
+**lines_plot(dataframe,ctg.idx,num.idx,condition,condition.idx,colors,mode='lines',**
+**yaxis_name="",linewidth=2,title,...)**
+
+- *dataframe:* a dataframe object
+
+- *ctg.idx:*	a character or an integer, indicate which column will be selected as the variable to show in x axis
+
+- *num.idx:*	a character or an integer, indicate which column(s) will be selected as the variable to show in y axis
+
+- *condition:*	a vector, indicate how to select part of the dataframe
+
+- *condition.idx:*	a character or an integer, indicate which column is the condition in. Should be given some value if the condition appears in multiple columns in the dataframe
+
+- *colors:*	a vector, the i-th element represent the color that will be used to draw the i-th line, which refers to the numeric value of i-th condition
+
+- *mode:*	how should each line displayed, usually be set as 'lines' or 'lines+markers'
+
+- *yaxis_name:*	name of y axis
+
+- *linewidth:*	the width of each line, default to 2
+
+- *title:*	the title of the plot
+
+- *...:* other parameters for plotting, mainly layout options such as "paper_bgcolor", "margin", "xaxis" and "yaxis"
+
+```{r}
+lines_plot(dataframe=dairy_fin_charts,
+           ctg.idx = 5,num.idx = 2,
+           condition=c('伊利股份','蒙牛股份','光明乳业'),
+           colors=c("#00526d","#de6e6e","#32ab60"),
+           yaxis_name = '营业收入',linewidth = 4,
+           title='乳制品企业营业收入图')
+
+lines_plot(dataframe=dairy_fin_charts,
+           ctg.idx = 5,num.idx = 2,
+           condition=c('伊利股份','蒙牛股份','光明乳业'),
+           colors=c("#00526d","#de6e6e","#32ab60"),
+           mode='lines+markers',linewidth = 2,
+           title='乳制品企业营业收入图',
+           yaxis_name='营业收入',
+           xaxis=list(showgrid=F,nticks=10,ticklen=4,tickangle=-45,
+                     ticks='outside',tickmode="array",
+                     type='category',title="年份"),
+           yaxis=list(visible=F),
+           legend=list(x=0.5,y=0.1,orientation='h',
+                      font=list(size=10),bgcolor="transparent"),
+           paper_bgcolor='#ccece6',
+           margin=list(t=32,l=32,r=32))
+```
+
+
+### 2.11 lines_split_plot(): Split lines to subplot for range-various series
+
+When lines in a line plot have range various too much, it's more appropriate to use subplots.
+This function helps in making such a plot, with specificial desgin for each y axis. The usage and arguments of the function are as follows:  
+
+**lines_split_plot(p=lines_split(dataframe,ctg.idx,num.idx,condition,condition.idx,colors,**
+**mode='lines',yaxis_name="",linewidth=2,title,...),...)**
+
+- *dataframe:*	a dataframe object
+
+- *ctg.idx:*	a character or an integer, indicate which column will be selected as the variable to show in x axis
+
+- *num.idx:*	a vector of character or an integer, indicate which column(s) will be selected as the variable to show in y axis
+
+- *condition:*	a vector, indicate how to select part of the dataframe
+
+- *condition.idx:* 	a character or an integer, indicate which column is the condition in. Should be given some value if the condition appears in multiple columns in the dataframe
+
+- *colors:*	a vector, the palette used to draw lines
+
+- *mode:*	how should each line displayed, usually be set as 'lines' or 'lines+markers' 
+
+- *yaxis_name:* 	name of y axis
+
+- *linewidth:*	the width of each line, default to 2
+
+- *title:*	the title of the plot
+
+- *...:* the ... in lines_split are for other parameters for plotting, mainly layout options such as "paper_bgcolor", "margin", "xaxis" and "margin", and the ... in lines_split_plot are for parameters about setting y axises
+
+```{r}
+lines_split_plot(p=lines_split(dataframe=macro_data_chn,ctg.idx = 'year',
+                 num.idx = c(3,5,6,9),
+                 colors=c("#00526d","#de6e6e","#32ab60","#ff8000"),
+                 title="一些宏观经济指标走势",
+                 xaxis=list(showgrid=F,ticklen=4,nticks=3,title="年份"),
+                 legend=list(x=0.5,y=1.05,orientation='h',bgcolor='transparent'),
+                 paper_bgcolor='#ccece6',
+                 margin=list(t=32,l=32,r=32)),
+                 yaxis=list(visible=F),
+                 yaxis2=list(visible=F),
+                 yaxis3=list(visible=F),
+                 yaxis4=list(visible=F))
+
+lines_split_plot(p=lines_split(dataframe=macro_data_chn,ctg.idx = 'year',
+                 num.idx = c(3,5,6,9),
+                 colors=c("#00526d","#de6e6e","#32ab60","#ff8000"),
+                 title="一些宏观经济指标走势",
+                 xaxis=list(showgrid=F,ticklen=4,nticks=3,title="年份"),
+                 legend=list(x=0.5,y=1.05,orientation='h',bgcolor='transparent'),
+                 paper_bgcolor='#ccece6',
+                 margin=list(t=32,l=32,r=32)))
+```
+
+### 2.12 line_ann_plot(): Lines plot with annotations about turning points
+
+Many time series have turning points and it's useful to have markers to mark the turning points as well as text to explain those turning points. This function makes this process way much simpler. The usage and arguments of the function are as follows:  
+
+**line_ann_plot(dataframe,ctg.idx,num.idx,condition,condition.idx,colors,events,**
+**marker_pos_x,ann_pos_x,text_pos_x,ann_pos_y,marker_refer,marker_pos_adj,yaxis_name,title,**
+**marker_color='rgb(246,78,139)',...)**
+
+- *dataframe:*	a dataframe object
+
+- *ctg.idx:*	a character or an integer, indicate which column will be selected as the variable to show in x axis
+
+- *num.idx:*	a character or an integer, indicate which column will be selected as the variable to show in y axis
+
+- *condition:*	a vector, indicate how to select part of the dataframe
+
+- *condition.idx:*	a character or an integer, indicate which column is the condition in. Should be given some value if the condition appears in multiple columns in the dataframe or condition is missing
+
+- *colors:*	a vector, the i-th element represent the color that will be used to draw the i-th line, which refers to the numeric value of i-th condition.
+
+- *events:*	a vector of strings, explanation of each turning point
+
+- *marker_pos_x:*	a vector, should be the same length as events, indicate the x axis position of turning points markers
+
+- *ann_pos_x:*	a numeric, indicate the x axis position of markers in annotation
+
+- *text_pos_x:*	a numeric, indicate the x axis position of explanations in annotation
+
+- *ann_pos_y:*	a vector of numeric, indicate the y axis position of markers in annotation
+
+- *marker_refer:*	which line should be referred to when putting turning points markers
+
+- *marker_pos_adj:*	should the marker in the plot have some position adjusting in y axis
+
+- *yaxis_name:*	name of y axis
+
+- *title:*	the title of the plot
+
+- *marker_color:*	the color of marker, default to 'rgb(246,78,139)'(alike purple)
+
+- *...:* other parameters for plotting, mainly layout options such as "paper_bgcolor" and "margin"
+
+```{r}
+line_ann_plot(dataframe=dairy_fin_charts,
+              ctg.idx='Year',num.idx='profit',
+              condition=c('伊利股份','蒙牛股份','光明乳业'),
+              colors = c("#00526d","#de6e6e","rgb(50,171,96)"),
+              events = c("中国奶制品污染事件&金融危机",
+                         "公布和实施经济刺激计划",
+                         "“互联网+”：传统行业进入电商时代",
+                         "中央一号文件：全面振兴奶业"),
+              marker_pos_x = c(2008,2009,2012,2017),
+              ann_pos_x = 2006, text_pos_x = 0.1, 
+              ann_pos_y = c(78,74,70,66),
+              marker_refer = c('光明乳业','蒙牛股份','伊利股份','伊利股份'),
+              yaxis_name = '利润总额（亿元）',
+              title = '乳制品企业利润变动与行业重要事件')
+
+line_ann_plot(dataframe=dairy_fin_charts,
+              ctg.idx='Year',num.idx='profit',
+              condition=c('伊利股份','蒙牛股份','光明乳业'),
+              colors = c("#00526d","#de6e6e","rgb(50,171,96)"),
+              events = c("中国奶制品污染事件&金融危机",
+                         "公布和实施经济刺激计划",
+                         "“互联网+”：传统行业进入电商时代",
+                         "中央一号文件：全面振兴奶业"),
+              marker_pos_x = c(2008,2009,2012,2017),
+              ann_pos_x = 2006, text_pos_x = 0.1, 
+              ann_pos_y = c(78,74,70,66),
+              marker_refer = c('光明乳业','蒙牛股份','伊利股份','伊利股份'),
+              marker_pos_adj=3,
+              yaxis_name = '利润总额（亿元）',
+              title = '乳制品企业利润变动与行业重要事件',
+              legend = list(x=0.5,y=0.1,orientation='h',
+                            font=list(size=10),bgcolor='transparent'),
+              xaxis = list(showgrid=T,nticks=12,
+                           ticks="outside",title="年份"),
+              paper_bgcolor='#ccece6')
+```
+
+### 2.13 polar_charts(): Drawing radar plot
+
+Radar plot is a great way to show comparison between multiple samples. For example, you may use this plot to compare two companies in a set of dimensions, such as income, profit, margin etc. The usage and arguments of the function are as follows: 
+
+**polar_charts(dataframe,colors,fills,fillcolors,title,...)**
+
+- *dataframe:*	a dataframe object
+
+- *colors:*	 a vector, the palette used to draw lines
+
+- *fills:*	a categorical string of either 'none' or 'toself', whether to fill the polygon created by the line
+
+- *fillcolors:*	a vector, the palette used to fill polygons, will be ignored if related 'fills' is set to 'none'
+
+- *title:*	the name of the plot
+
+- *...:* other parameters for plotting, mainly layout options such as "paper_bgcolor" and "margin"
+
+```{r}
+## prepare data, it's generate from analysis of NASDAQ: MDLZ
+MDLZ=c(6,5,2,6,1,5,1,1,3,1,2,2,10,10,9,9)
+others=c(7,9,6,6,3,2,2,2,3,2,4,4,10,10,9,9)
+polar.dataframe=rbind(MDLZ,others)
+row.names(polar.dataframe)=c('亿滋国际','市场同业竞争者均值')
+colnames(polar.dataframe)=c('股息收益','净资产收益率',
+                            '资产回报率','息税前利润',
+                            '销售增长率','净收入增长率',
+                            '营收增长期望','每股盈余期望',
+                            '市盈率','市售率',
+                            '企业价值倍数','市现率',
+                            '总市值','成交量',
+                            '波动性','风险系数')
+
+## a simple example
+polar_charts(dataframe=polar.dataframe,
+             colors=c('#FF7F00','#33A02C'),
+             fills=c('toself','none'),
+             fillcolors=c('#FDBF6F','#B2DF8A'),
+             title='亿滋国际和同行竞争对手股票指标对比',
+             margin=list(t=56))
+
+## another way
+polar_charts(dataframe=polar.dataframe,
+             colors=c('#FF7F00','#33A02C'),
+             fills=c('toself','toself'),
+             fillcolors=c('rgba(253,191,111,0.3)','rgba(178,223,138,0.3)'),
+             title='亿滋国际和同行竞争对手股票指标对比',
+             legend=list(x=1,y=0,bgcolor='transparent',
+                         font=list(size=14,family='heiti')),
+             margin=list(t=56),
+             paper_bgcolor='#ccece6')
+```
+
+### 2.14 rank_plot(): Plotting change of ranks over index
+
+rank_plot gives a plot of ranks for a categorical variable. The function makes it clear to see the trend of each category and how their relations change. The usage and arguments of the function are as follows: 
+
+- *dataframe:*	a dataframe object
+
+- *ctg.idx:*	a character or an integer, indicate which column will be selected as the variable to show in x axis
+
+- *num.idx:*	a vector of character or an integer, indicate which column(s) will be selected as the variable to show in y axis
+
+- *condition.idx:*	a character or an integre, indicate which column will be treated as the legend name
+
+- *criteria:*	a character or a numeric, depend on the class of element of the column specified by ctg.idx
+
+- *top_N:*	a integer, if there are too many categories in the legend, use this argument to choose the top n levels with respect to criteria
+
+- *colors:*	a vector, the palette used for plotting
+
+- *yaxis_name:*	name of y axis
+
+- *title:*	the the title of the plot
+
+- *...:* other parameters for plotting, mainly layout options such as "paper_bgcolor" and "margin"
+
+
+```{r}
+rank_plot(dataframe=estate_fin_charts,
+          ctg.idx = 'Year',num.idx = 'margin',
+          condition.idx = '证券简称',
+          criteria=2016,top_N=5,
+          colors=brewer.pal(5,'Set1'),
+          yaxis_name='利润排名',
+          title='2016年利润排名前5的房地产企业历年排名变化',
+          paper_bgcolor='#ccece6',
+          margin=list(t=36,l=24))
+
+
+test_df = macro_data_chn
+test_df[1:3,9] <- NA
+rank_plot(dataframe=test_df,
+          ctg.idx='year',num.idx=c(9:12),
+          criteria = 2016,
+          colors = brewer.pal(4,'Set1'),
+          yaxis_name = '商品价格排名',
+          title='一些大宗商品的历年价格排名',
+          xaxis = list(showgrid=T,nticks=5,
+                       ticklen=4,tickangle=-45,
+                       ticks='outside',tickmode="auto",
+                       type='category',title="年份"),
+          paper_bgcolor='#ccece6',
+          margin=list(t=36,l=24))
+
+```
+
+**Note:** Warnings will be generated when plotting more than 6 categories, since there are only 6 different linetypes in R. The function has already taken care of this issue by sample, so just ignore warnings.
+
+
+## 3. Data Analysis
+
+### 3.1 cal_pct(): Calculate percentage for each category
+
+It's very common in business analysis to calculate the percentage of a categorical variable regarding to some numerical variable, like the market share of each company in a certain year. The usage and arguments of the function are as follows: 
+
+**cal_pct(dataframe,ctg.idx,num.idx,condition,condition.idx)**
+
+- *dataframe:*	a dataframe object
+
+- *ctg.idx:*	a character or an integer, indicate which column will be selected as the categorical variable
+
+- *num.idx:*	a character or an integer, indicate which column will be selected as the numerical variable
+
+- *condition:*	a character or a numeric, indicate whether to select part of the dataframe
+
+- *condition.idx:*	a character or an integer, indicate which column is the condition in. Should be given some value only if the condition appears in multiple columns in the dataframe
+
+```{r}
+cal_pct(dairy_fin_charts,
+        ctg.idx = 'name',
+        num.idx = "income",
+        condition=2017)
+
+## another way to get the same result
+cal_pct(dairy_fin_charts[dairy_fin_charts$Year==2017,],
+        ctg.idx = 1,
+        num.idx = 2)
+
+cal_pct(dairy_fin_charts,
+        ctg.idx = 1,num.idx = 2,
+        condition=2010)
+```
+
+### 3.2 get_rank(): Get rank for each category
+
+Another task in business analysis is to get rank of each category, like the rank of company's profit in a certain industry. It can be tricky in some exterme cases like having missing values or some category have same value. This function takes good care of it. The usage and arguments of the function are as follows: 
+
+**get_rank(dataframe,ctg.idx,num.idx,condition,condition.idx)**
+
+- *dataframe:* a dataframe object
+
+- *ctg.idx:* a character or an integer, indicate which column will be selected as the categorical variable
+
+- *num.idx:* a character or an integer, indicate which column will be selected as the numerical variable
+
+- *condition:*	a character or a numeric, indicate whether to select part of the dataframe
+
+- *condition.idx:*	a character or an integer, indicate which column is the condition in. Should be given some value only if the condition appears in multiple columns in the dataframe
+
+```{r}
+get_rank(dairy_fin_charts,
+         ctg.idx = 'name',
+         num.idx = "income",
+         condition=2017)
+
+get_rank(dairy_fin_charts[dairy_fin_charts$Year==2017,],
+         ctg.idx = 1,num.idx = 2)
+
+## when two categories have same value
+dairy_fin_charts[97,2]=12.40
+get_rank(dairy_fin_charts,
+         ctg.idx = 'name',
+         num.idx = "income",
+         condition=2017)
+
+## when have missing value
+get_rank(dairy_fin_charts,
+         ctg.idx = 1,
+         num.idx = 2,
+         condition=2010)
+
+```
+
+### 3.3 lin_predict(): Linear extrapolation using dynamice linear model
+
+It's really often to do prediction or extrapolation of a numerical variable, especially when it is a time series. This function accomplish this task by using dynamic linear model, more specifically, random walk plus trend model. The usage and arguments of the function are as follows: 
+
+**lin_predict(dataframe,ts.idx,t_ahead,addCI,ctg.idx,extra_names,xaxis_name,yaxis_name,**
+**title,...)**
+
+- *dataframe:*	a dataframe object
+
+- *ts.idx:*	a character or a numeric, indicate the column in the dataframe that you want to get prediction with
+
+- *t_ahead:*	an integer, how many predictions whould be made
+
+- *addCI:*	a logical, whether to add confidence interval to the visualization
+
+- *ctg.idx:*	a character or a numeric, indicate the column in the dataframe that will be used as the x axis index in the plot
+
+- *extra_names:*	a vector of strings, will be used as the x axis tick text for prediction points
+
+- *xaxis_name:*	the name of x axis for the plot
+
+- *yaxis_name:*	the name of y axis for the plot
+
+- *title:*	the name of the plot
+
+```{r}
+GDP_predict=lin_predict(dataframe=macro_data_chn,
+                        ts.idx='GDP',t_ahead=3,
+                        addCI=T,
+                        xaxis_name='Time',
+                        yaxis_name='GDP(元)',
+                        title='GDP未来三年预测')
+GDP_predict$pred.mtx
+GDP_predict$pred.plot
+```
+
+```{r}
+GDP_predict=lin_predict(dataframe=macro_data_chn,
+                        ts.idx='GDP',
+                        t_ahead=3,addCI=T,
+                        ctg.idx=1,extra_names = c(2017,2018,2019),
+                        xaxis_name='年份',
+                        yaxis_name='GDP(元)',
+                        title='GDP未来三年预测',
+                        legend=list(x=0.72,y=0.1,bgcolor='transparent'),
+                        margin=list(t=45,l=45,r=18),
+                        paper_bgcolor='#ccece6')
+GDP_predict$pred.mtx
+GDP_predict$pred.plot
+```
+
+### 3.4 plm_basic(): Stepwise numerical variable selection for panel regression
+
+It's always tricky to select variables to put in a panel regression model. This function is designed to simplify this process. It follows a standard way of doing exploratory panel regrssion by adding variable of interest one at each step in the model. Tests are used to select the best model between "OLS", "fixed effect" and "random effect". The usage and arguments of the function are as follows: 
+
+**plm_basic(dataframe,id.idx,t.idx,dep.idx,control.idx,num.idx,step)**
+
+- *dataframe:* a dataframe object
+
+- *id.idx:*	a string or an integer, indicate which column of the dataframe will be used as individual index in panel dataframe
+
+- *t.idx:*	a string or an integer, indicate which column of the dataframe will be used as time index in panel dataframe
+
+- *dep.idx:*	a string or an integer, indicate which column of the dataframe will be used as the dependent variable, i.e. y, in the regression function
+
+- *control.idx:*	a vector of strings or integers, but not both, indicate which column(s) of the dataframe will be used as control variables in regression function
+
+- *num.idx:*	a vector of strings or integers, but not both, indicate which column(s) of the dataframe will be used as independent variables of interest in regression function
+
+- *step:*	how many forward steps should be made
+
+```{r}
+estate_fin_charts$lg_asset=log(estate_fin_charts$asset)
+model.list=plm_basic(dataframe=estate_fin_charts,
+                     id.idx=3,t.idx='Year',
+                     dep.idx='lg_income',
+                     control.idx=c('mkt_price','lg_asset'),
+                     num.idx=c(5,6,7,8,10,11,14,15),step=5)
+
+```
+
