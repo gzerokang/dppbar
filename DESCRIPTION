@@ -16,7 +16,7 @@ Depends:
     R (>= 3.1.0)
 Imports:
     dlm (>= 1.1.4),
-    dummies (>= 1.5.6),
+    dummy (>= 0.1.3),
     dplyr (>= 0.7.2),
     ggplot2 (>= 3.0.0),
     plm (>= 1.6.6),
