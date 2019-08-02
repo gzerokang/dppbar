@@ -48,7 +48,8 @@
 #'    \code{plm_basic()} \tab Stepwise model selection for plm\cr
 #' }
 #'
-#'
+#' @section Vignette
+#' An English version of Vignette can be found at \url{https://jkang37.github.io/Data-Processing-and-Plotting/}
 #'
 #' @author Jizhou Kang \email{jizhou_kang@@hotmail.com}
 #'

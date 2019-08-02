@@ -92,7 +92,7 @@ plm_basic = function(dataframe,id.idx,t.idx,dep.idx,control.idx,num.idx,step){
       formula=paste(dep,'~',indep.all,sep='')
       formula=as.formula(formula)
       model=model_selection(formula)
-      p.value=summary(model)$coefficients[new.var,'Pr(>|t|)']
+      p.value=summary(model)$coefficients[new.var,4]
       summarize.info=list()
       summarize.info$model=model
       summarize.info$var=new.var
